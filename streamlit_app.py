@@ -6,7 +6,7 @@ from images using Google Gemini AI. Supports multiple languages and
 provides optimized titles, descriptions, and tags for e-commerce platforms.
 
 Features:
-- Multi-language support (12 languages)
+- Multi-language support (12 languages) - Generate content in multiple languages
 - Image upload and analysis
 - AI-generated product content
 - Professional styling and UX
@@ -201,7 +201,7 @@ def main():
             help="Upload a clear image of your product for best results"
         )
 
-        # Language selection
+        # Language selection - multi-language support for global e-commerce
         st.subheader("🌐 Select Output Language")
         language_options = {
             "English": "en",
