@@ -146,7 +146,8 @@ cython_debug/
 .vscode/
 
 # Streamlit
-.streamlit/
+.streamlit/secrets.toml
+.streamlit/credentials.toml
 
 # FastAPI
 .fastapi/
