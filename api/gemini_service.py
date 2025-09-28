@@ -17,7 +17,23 @@ logger = logging.getLogger(__name__)
 
 class GeminiService:
     """Service for Google Gemini Vision API integration"""
-    
+
+    # Language code to full name mapping
+    LANGUAGE_MAPPING = {
+        "en": "English",
+        "th": "Thai",
+        "zh": "Chinese",
+        "ja": "Japanese",
+        "ko": "Korean",
+        "es": "Spanish",
+        "fr": "French",
+        "de": "German",
+        "it": "Italian",
+        "pt": "Portuguese",
+        "ru": "Russian",
+        "ar": "Arabic"
+    }
+
     def __init__(self):
         """Initialize the Gemini service with API key"""
         self.api_key = os.getenv("GOOGLE_API_KEY")
@@ -33,7 +49,16 @@ class GeminiService:
             except Exception as e:
                 logger.error(f"❌ Failed to initialize Gemini API: {e}")
                 self.model = None
-    
+
+    def _get_language_name(self, language_code_or_name: str) -> str:
+        """Convert language code to full name, or return as-is if already a full name"""
+        # If it's a 2-letter code, convert to full name
+        if len(language_code_or_name) == 2 and language_code_or_name.lower() in self.LANGUAGE_MAPPING:
+            return self.LANGUAGE_MAPPING[language_code_or_name.lower()]
+
+        # If it's already a full name or not in mapping, return as-is
+        return language_code_or_name
+
     def _prepare_image(self, image_data: bytes) -> Optional[Image.Image]:
         """Prepare image for analysis"""
         try:
@@ -91,18 +116,22 @@ Analyze the image now and provide the product information:
     async def analyze_product_image(self, image_data: bytes, language: str = "English") -> Dict[str, Any]:
         """
         Analyze product image using Gemini Vision API
-        
+
         Args:
             image_data: Raw image bytes
-            language: Target language for the analysis
-            
+            language: Target language code (e.g., "th") or full name (e.g., "Thai")
+
         Returns:
             Dictionary containing analysis results
         """
         try:
+            # Convert language code to full name if needed
+            language_name = self._get_language_name(language)
+            logger.info(f"🌐 Language mapping: '{language}' -> '{language_name}'")
+
             # If no API key or model, return enhanced mock response
             if not self.model:
-                return self._generate_mock_response(image_data, language)
+                return self._generate_mock_response(image_data, language_name)
             
             # Prepare image
             image = self._prepare_image(image_data)
@@ -110,10 +139,10 @@ Analyze the image now and provide the product information:
                 raise ValueError("Failed to process image")
             
             # Create analysis prompt
-            prompt = self._create_analysis_prompt(language)
-            
+            prompt = self._create_analysis_prompt(language_name)
+
             # Generate content with Gemini
-            logger.info(f"🤖 Analyzing image with Gemini Vision API (Language: {language})")
+            logger.info(f"🤖 Analyzing image with Gemini Vision API (Language: {language_name})")
             response = self.model.generate_content([prompt, image])
             
             # Parse response
@@ -138,18 +167,18 @@ Analyze the image now and provide the product information:
                         return analysis_result
                     else:
                         logger.warning("⚠️ Gemini response missing required fields, using fallback")
-                        return self._create_fallback_response(response_text, language)
-                        
+                        return self._create_fallback_response(response_text, language_name)
+
                 except json.JSONDecodeError:
                     logger.warning("⚠️ Failed to parse Gemini JSON response, using fallback")
-                    return self._create_fallback_response(response_text, language)
+                    return self._create_fallback_response(response_text, language_name)
             else:
                 logger.warning("⚠️ Empty response from Gemini API")
-                return self._generate_mock_response(image_data, language)
-                
+                return self._generate_mock_response(image_data, language_name)
+
         except Exception as e:
             logger.error(f"❌ Error in Gemini analysis: {e}")
-            return self._generate_mock_response(image_data, language)
+            return self._generate_mock_response(image_data, language_name)
     
     def _create_fallback_response(self, ai_text: str, language: str) -> Dict[str, Any]:
         """Create fallback response when JSON parsing fails but we have AI text"""
@@ -182,7 +211,8 @@ Analyze the image now and provide the product information:
         
         mock_titles = {
             "English": "Premium Quality Product",
-            "Spanish": "Producto de Calidad Premium", 
+            "Thai": "สินค้าคุณภาพพรีเมียม",
+            "Spanish": "Producto de Calidad Premium",
             "French": "Produit de Qualité Premium",
             "German": "Premium Qualitätsprodukt",
             "Japanese": "プレミアム品質製品",
