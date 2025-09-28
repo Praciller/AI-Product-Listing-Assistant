@@ -200,3 +200,39 @@ logs/
 # Local configuration
 config.local.py
 settings.local.py
+
+# Augment AI Assistant
+.augment/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
+
+# Node.js
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Screenshots and test files
+screenshots/
+frontend/screenshots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+!public/*.png
+!public/*.jpg
+!public/*.jpeg
+!public/*.gif

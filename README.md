@@ -21,6 +21,8 @@ An intelligent e-commerce tool that automatically generates product titles, desc
 
 ## 🏗️ Architecture
 
+The application follows a modern three-layer architecture with enterprise-grade resilience patterns:
+
 ```
 ┌─────────────────┐    HTTP     ┌─────────────────┐    API     ┌─────────────────┐
 │   Streamlit     │ ────────────▶│    FastAPI      │ ──────────▶│   Google        │
@@ -28,6 +30,20 @@ An intelligent e-commerce tool that automatically generates product titles, desc
 │                 │◀──────────── │                 │◀────────── │                 │
 └─────────────────┘   Response   └─────────────────┘  Response  └─────────────────┘
 ```
+
+### Service Layers
+
+1. **Service Layer** (`GeminiService`): Core AI integration and image processing
+2. **Manager Layer** (`ProductAnalysisManager`): Business logic and validation
+3. **Resilience Layer** (`ResilientProductAnalysisService`): Retry logic and circuit breaker patterns
+
+### Key Features
+
+- **Circuit Breaker Pattern**: Prevents cascading failures
+- **Retry Logic**: Automatic retry with exponential backoff
+- **Structured Logging**: JSON-formatted logs with contextual information
+- **Health Checks**: Comprehensive service health monitoring
+- **Type Safety**: Full type hints for better code quality
 
 ## 🚀 Quick Start
 
@@ -138,6 +154,68 @@ Health check endpoint.
 }
 ```
 
+#### `GET /health`
+
+Comprehensive health check with service status.
+
+**Response:**
+
+```json
+{
+  "status": "healthy",
+  "message": "All services operational",
+  "timestamp": "2024-01-01T12:00:00Z"
+}
+```
+
+#### `GET /languages`
+
+Get supported languages.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "languages": {
+    "en": "English",
+    "th": "Thai",
+    "zh": "Chinese"
+  },
+  "count": 3
+}
+```
+
+#### `GET /circuit-breaker/status`
+
+Get circuit breaker status.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "circuit_breaker": {
+    "circuit_open": false,
+    "failure_count": 0,
+    "threshold": 5
+  }
+}
+```
+
+#### `POST /circuit-breaker/reset`
+
+Reset the circuit breaker.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Circuit breaker reset successfully"
+}
+```
+
 #### `POST /generate-product-info`
 
 Analyze a product image and generate listing information in the specified language.
@@ -185,13 +263,33 @@ When the FastAPI server is running, visit:
 
 ```
 AI-Product-Listing-Assistant/
-├── main.py                 # FastAPI backend server
-├── streamlit_app.py        # Streamlit frontend application
-├── pyproject.toml         # Project dependencies and metadata
-├── uv.lock               # Dependency lock file
-├── requirements.txt       # Dependencies for Streamlit Cloud
-├── .gitignore            # Git ignore file
-└── README.md             # This file
+├── main.py                          # FastAPI backend server
+├── streamlit_app.py                 # Streamlit frontend application
+├── services/                        # Service layer modules
+│   ├── __init__.py
+│   ├── gemini_service.py           # Core Gemini AI integration
+│   ├── product_analysis_manager.py # Business logic layer
+│   └── resilient_product_analysis_service.py # Resilience layer
+├── tests/                          # Comprehensive test suite
+│   ├── __init__.py
+│   ├── conftest.py                 # Test configuration and fixtures
+│   ├── unit/                       # Unit tests
+│   │   ├── __init__.py
+│   │   ├── test_gemini_service.py
+│   │   └── test_product_analysis_manager.py
+│   ├── integration/                # Integration tests
+│   │   ├── __init__.py
+│   │   └── test_api_endpoints.py
+│   └── e2e/                        # End-to-end tests
+│       ├── __init__.py
+│       └── test_streamlit_app.py
+├── pyproject.toml                  # Project dependencies and metadata
+├── pytest.ini                     # Pytest configuration
+├── Makefile                        # Development commands
+├── .env                           # Environment variables (not in git)
+├── .env.example                   # Environment variables template
+├── .gitignore                     # Git ignore file
+└── README.md                      # This file
 ```
 
 ## ☁️ Deployment on Streamlit Cloud
@@ -250,9 +348,59 @@ AI-Product-Listing-Assistant/
 
 ## 🧪 Testing
 
-### Using Sample Images
+The project includes a comprehensive test suite with unit, integration, and end-to-end tests.
 
-The project includes the iMaterialist Fashion 2021 dataset in the `dataset/` folder for testing. You can use any product images to test the application.
+### Test Structure
+
+- **Unit Tests**: Test individual components in isolation
+- **Integration Tests**: Test API endpoints with real HTTP requests
+- **End-to-End Tests**: Test complete user workflows using Playwright
+
+### Running Tests
+
+#### All Tests
+
+```bash
+make test-all
+```
+
+#### Unit Tests Only
+
+```bash
+make test-unit
+# or
+pytest tests/unit -v
+```
+
+#### Integration Tests Only
+
+```bash
+make test-integration
+# or
+pytest tests/integration -v
+```
+
+#### End-to-End Tests Only
+
+```bash
+make test-e2e
+# or
+pytest tests/e2e -v -m "e2e and not slow"
+```
+
+#### With Coverage Report
+
+```bash
+pytest tests/ -v --cov=. --cov-report=term-missing --cov-report=html
+```
+
+### Test Features
+
+- **Mocked AI Responses**: Tests don't require actual API calls
+- **Fixture-based Setup**: Reusable test components
+- **Comprehensive Coverage**: Tests cover success and error scenarios
+- **Browser Automation**: E2E tests use Playwright for real browser testing
+- **Parallel Execution**: Tests can run in parallel for faster feedback
 
 ### Manual Testing
 
@@ -343,12 +491,38 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📊 Tech Stack
 
+### Core Technologies
+
 - **Backend**: Python, FastAPI, Uvicorn
 - **Frontend**: Streamlit
 - **AI**: Google Gemini 2.0 Flash
 - **Package Management**: uv
 - **Image Processing**: PIL (Pillow)
 - **HTTP Client**: Requests
+
+### Development & Testing
+
+- **Testing Framework**: pytest
+- **Test Types**: Unit, Integration, E2E
+- **Browser Testing**: Playwright
+- **Mocking**: pytest-mock, unittest.mock
+- **Coverage**: pytest-cov
+- **HTTP Testing**: httpx, respx
+
+### Architecture & Patterns
+
+- **Resilience**: Circuit Breaker, Retry Logic
+- **Logging**: Structured logging with structlog
+- **Validation**: Pydantic models
+- **Error Handling**: Tenacity for retries
+- **Type Safety**: Full type hints with mypy
+
+### Code Quality
+
+- **Formatting**: Black, isort
+- **Linting**: Ruff, mypy
+- **Build System**: Modern pyproject.toml
+- **Task Runner**: Make for development commands
 
 ---
 
