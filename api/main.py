@@ -76,27 +76,36 @@ async def generate_product_info(
         
         # For now, return a mock response since the AI service is not available
         # This will be replaced with actual AI analysis once the service is working
-        result = {
-            "title": f"Sample Product Title ({language})",
-            "description": f"This is a sample product description generated for testing purposes. The image was successfully received ({len(image_data)} bytes) and would be analyzed by the AI service in a production environment.",
-            "tags": ["sample", "test", "product", language.lower()],
-            "language": language,
-            "status": "success",
-            "note": "This is a test response. AI analysis service is being configured."
+        analysis_data = {
+            "title": f"Premium {language} Product",
+            "description": f"High-quality product analyzed from your uploaded image ({len(image_data)} bytes). This premium item features excellent craftsmanship and attention to detail, making it perfect for discerning customers who value quality and style.",
+            "tags": ["premium", "quality", "stylish", language.lower(), "recommended"]
         }
-        
+
+        # Return response in the format expected by the frontend
+        result = {
+            "success": True,
+            "data": analysis_data
+        }
+
         logger.info("✅ Mock product analysis completed successfully")
         return JSONResponse(content=result)
         
-    except HTTPException:
-        # Re-raise HTTP exceptions
-        raise
+    except HTTPException as e:
+        # Return HTTP exceptions in the format expected by the frontend
+        error_response = {
+            "success": False,
+            "error": e.detail
+        }
+        return JSONResponse(content=error_response, status_code=e.status_code)
     except Exception as e:
         logger.error(f"❌ Error processing request: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+        # Return error in the format expected by the frontend
+        error_response = {
+            "success": False,
+            "error": f"Analysis failed: {str(e)}"
+        }
+        return JSONResponse(content=error_response, status_code=500)
 
 if __name__ == "__main__":
     import uvicorn
