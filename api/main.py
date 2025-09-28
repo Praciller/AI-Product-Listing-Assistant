@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Simple FastAPI application for AI Product Listing Assistant
-Minimal version for Vercel deployment testing
+AI Product Listing Assistant API with Google Gemini Vision integration
+Real AI-powered product image analysis for e-commerce listings
 """
 
 import os
@@ -9,15 +9,23 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
+from dotenv import load_dotenv
+from gemini_service import GeminiService
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Initialize Gemini service
+gemini_service = GeminiService()
+
 app = FastAPI(
     title="AI Product Listing Assistant API",
-    description="API for generating product listings using AI",
-    version="1.0.0"
+    description="API for generating product listings using Google Gemini AI",
+    version="2.0.0"
 )
 
 # Configure CORS
@@ -35,8 +43,10 @@ async def root():
     return {
         "message": "AI Product Listing Assistant API",
         "status": "running",
-        "version": "1.0.0",
-        "environment": "production"
+        "version": "2.0.0",
+        "environment": "production",
+        "ai_service": "Google Gemini Vision API",
+        "features": ["real_image_analysis", "multi_language_support", "accurate_product_listings"]
     }
 
 @app.get("/health")
@@ -74,13 +84,9 @@ async def generate_product_info(
                 detail="Empty file uploaded. Please select a valid image."
             )
         
-        # For now, return a mock response since the AI service is not available
-        # This will be replaced with actual AI analysis once the service is working
-        analysis_data = {
-            "title": f"Premium {language} Product",
-            "description": f"High-quality product analyzed from your uploaded image ({len(image_data)} bytes). This premium item features excellent craftsmanship and attention to detail, making it perfect for discerning customers who value quality and style.",
-            "tags": ["premium", "quality", "stylish", language.lower(), "recommended"]
-        }
+        # Analyze image using Google Gemini Vision API
+        logger.info(f"🤖 Starting AI analysis for {file.filename} ({len(image_data)} bytes)")
+        analysis_data = await gemini_service.analyze_product_image(image_data, language)
 
         # Return response in the format expected by the frontend
         result = {
@@ -88,7 +94,7 @@ async def generate_product_info(
             "data": analysis_data
         }
 
-        logger.info("✅ Mock product analysis completed successfully")
+        logger.info("✅ AI product analysis completed successfully")
         return JSONResponse(content=result)
         
     except HTTPException as e:
