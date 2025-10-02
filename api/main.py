@@ -96,7 +96,7 @@ async def generate_product_info(
 
         logger.info("✅ AI product analysis completed successfully")
         return JSONResponse(content=result)
-
+        
     except HTTPException as e:
         # Return HTTP exceptions in the format expected by the frontend
         error_response = {
@@ -104,27 +104,6 @@ async def generate_product_info(
             "error": e.detail
         }
         return JSONResponse(content=error_response, status_code=e.status_code)
-    except ValueError as e:
-        # Handle non-product image errors
-        error_message = str(e)
-        if error_message.startswith("NOT_A_PRODUCT:"):
-            # Extract the AI-generated reason
-            reason = error_message.replace("NOT_A_PRODUCT:", "").strip()
-            logger.warning(f"⚠️ Non-product image rejected: {reason}")
-
-            error_response = {
-                "success": False,
-                "error": reason
-            }
-            return JSONResponse(content=error_response, status_code=400)
-        else:
-            # Other ValueError exceptions
-            logger.error(f"❌ ValueError: {error_message}")
-            error_response = {
-                "success": False,
-                "error": f"Image processing error: {error_message}"
-            }
-            return JSONResponse(content=error_response, status_code=400)
     except Exception as e:
         logger.error(f"❌ Error processing request: {str(e)}")
         # Return error in the format expected by the frontend

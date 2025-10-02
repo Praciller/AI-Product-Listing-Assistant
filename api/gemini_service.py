@@ -80,38 +80,6 @@ class GeminiService:
             logger.error(f"❌ Error preparing image: {e}")
             return None
     
-    def _create_classification_prompt(self, language: str) -> str:
-        """Create prompt for image classification"""
-        return f"""
-You are an expert image classifier for an e-commerce product listing platform.
-
-Analyze this image and determine if it shows a PHYSICAL PRODUCT that can be sold in an e-commerce store.
-
-**ACCEPTABLE PRODUCT IMAGES:**
-- Physical products: electronics, clothing, accessories, furniture, toys, tools, etc.
-- Items that can be photographed and sold online
-- Products in any condition (new, used, packaged, unpackaged)
-
-**NOT ACCEPTABLE (Non-Product Images):**
-- Payment slips, receipts, invoices, or transaction confirmations
-- Screenshots of apps, websites, or digital interfaces
-- Documents, forms, certificates, or text-heavy papers
-- QR codes, barcodes, or tickets
-- Memes, artwork, or illustrations (unless the artwork itself is the product)
-- Blank images, pure text images, or diagrams
-
-**Response Format:**
-Respond with a JSON object in this exact format:
-{{
-  "is_product": true or false,
-  "image_type": "brief description of what the image shows",
-  "confidence": "high" or "medium" or "low",
-  "reason": "brief explanation in {language} of why this is or isn't a product image"
-}}
-
-Analyze the image now:
-"""
-
     def _create_analysis_prompt(self, language: str) -> str:
         """Create a detailed prompt for product analysis"""
         return f"""
@@ -145,52 +113,6 @@ Please respond with a JSON object containing:
 Analyze the image now and provide the product information:
 """
     
-    async def _classify_image(self, image: Image.Image, language: str) -> Dict[str, Any]:
-        """
-        Classify image to determine if it's a product or not
-
-        Args:
-            image: PIL Image object
-            language: Target language for response
-
-        Returns:
-            Dictionary with classification results
-        """
-        try:
-            # Create classification prompt
-            prompt = self._create_classification_prompt(language)
-
-            # Generate classification with Gemini
-            logger.info(f"🔍 Classifying image type...")
-            response = self.model.generate_content([prompt, image])
-
-            if response.text:
-                response_text = response.text.strip()
-
-                # Remove markdown code blocks if present
-                if response_text.startswith('```json'):
-                    response_text = response_text[7:]
-                if response_text.endswith('```'):
-                    response_text = response_text[:-3]
-
-                try:
-                    import json
-                    classification = json.loads(response_text)
-                    logger.info(f"✅ Classification: {classification.get('image_type')} (is_product: {classification.get('is_product')})")
-                    return classification
-                except json.JSONDecodeError:
-                    logger.warning("⚠️ Failed to parse classification JSON")
-                    # Default to allowing the image if classification fails
-                    return {"is_product": True, "image_type": "unknown", "confidence": "low", "reason": "Classification failed"}
-            else:
-                logger.warning("⚠️ Empty classification response")
-                return {"is_product": True, "image_type": "unknown", "confidence": "low", "reason": "No response"}
-
-        except Exception as e:
-            logger.error(f"❌ Error in image classification: {e}")
-            # Default to allowing the image if classification fails
-            return {"is_product": True, "image_type": "unknown", "confidence": "low", "reason": str(e)}
-
     async def analyze_product_image(self, image_data: bytes, language: str = "English") -> Dict[str, Any]:
         """
         Analyze product image using Gemini Vision API
@@ -200,7 +122,7 @@ Analyze the image now and provide the product information:
             language: Target language code (e.g., "th") or full name (e.g., "Thai")
 
         Returns:
-            Dictionary containing analysis results or error
+            Dictionary containing analysis results
         """
         try:
             # Convert language code to full name if needed
@@ -210,32 +132,17 @@ Analyze the image now and provide the product information:
             # If no API key or model, return enhanced mock response
             if not self.model:
                 return self._generate_mock_response(image_data, language_name)
-
+            
             # Prepare image
             image = self._prepare_image(image_data)
             if not image:
                 raise ValueError("Failed to process image")
-
-            # Step 1: Classify the image first
-            classification = await self._classify_image(image, language_name)
-
-            # Step 2: Check if it's a product image
-            if not classification.get("is_product", True):
-                # Not a product image - return error with helpful message
-                image_type = classification.get("image_type", "non-product image")
-                reason = classification.get("reason", "This image does not appear to be a product")
-
-                logger.warning(f"⚠️ Non-product image detected: {image_type}")
-
-                # Return error in a format that the API can handle
-                raise ValueError(f"NOT_A_PRODUCT: {reason}")
-
-            # Step 3: Proceed with product analysis
+            
             # Create analysis prompt
             prompt = self._create_analysis_prompt(language_name)
 
             # Generate content with Gemini
-            logger.info(f"🤖 Analyzing product image with Gemini Vision API (Language: {language_name})")
+            logger.info(f"🤖 Analyzing image with Gemini Vision API (Language: {language_name})")
             response = self.model.generate_content([prompt, image])
             
             # Parse response
@@ -269,13 +176,6 @@ Analyze the image now and provide the product information:
                 logger.warning("⚠️ Empty response from Gemini API")
                 return self._generate_mock_response(image_data, language_name)
 
-        except ValueError as e:
-            # Re-raise ValueError for non-product images (don't catch these)
-            if str(e).startswith("NOT_A_PRODUCT:"):
-                raise
-            # Other ValueErrors
-            logger.error(f"❌ ValueError in Gemini analysis: {e}")
-            return self._generate_mock_response(image_data, language_name)
         except Exception as e:
             logger.error(f"❌ Error in Gemini analysis: {e}")
             return self._generate_mock_response(image_data, language_name)
