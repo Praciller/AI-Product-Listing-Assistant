@@ -4,6 +4,10 @@ Multimodal GenAI tool that turns product images into SEO-friendly product titles
 
 Live demo: https://ai-product-listing-assistant.vercel.app/
 
+## Preview
+
+![AI Product Listing Assistant live demo](docs/screenshots/live-demo.jpg)
+
 ## Role Fit
 
 | Target role | Evidence shown in this repo |
