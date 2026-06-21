@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AI Product Listing Assistant",
   description:
-    "Generate professional product listings from images using AI. Supports multiple languages and provides optimized titles, descriptions, and tags for e-commerce platforms.",
+    "Create reviewable draft product listings from images with a mock-first local workflow and optional Gemini analysis.",
 };
 
 export default function RootLayout({

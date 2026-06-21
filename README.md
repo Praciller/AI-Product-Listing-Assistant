@@ -1,159 +1,113 @@
 # AI Product Listing Assistant
 
-Multimodal GenAI tool that turns product images into SEO-friendly product titles, descriptions, and tags. The project demonstrates image understanding, multilingual generation, FastAPI service design, and resilience patterns around AI API calls.
+Portfolio demonstration of a mock-first multimodal listing workflow. A FastAPI backend and Next.js interface turn an uploaded image into a structured draft title, description, and tags. The default path is deterministic, offline, and requires no API key, paid service, or real product photo.
 
-Live demo: https://ai-product-listing-assistant.vercel.app/
+## What this demonstrates
 
-## Preview
+- Explicit provider routing with offline mock mode as the safe default.
+- Optional Gemini image analysis behind three opt-in settings.
+- Structured multilingual draft output with warnings and provider trace.
+- Synthetic test evidence, privacy guardrails, backend tests, and CI.
+- FastAPI service boundaries and a Next.js upload interface.
 
-![AI Product Listing Assistant live demo](docs/screenshots/live-demo.jpg)
+Generated copy is decision-support draft content. It is not legal advice, a marketplace approval, or a guarantee of search performance.
 
-## Role Fit
+## Zero-cost local quickstart
 
-| Target role | Evidence shown in this repo |
-| --- | --- |
-| AI Engineer | Gemini Vision integration, structured output generation, API service layer |
-| GenAI Engineer | Multimodal prompting, multilingual generation, response validation |
-| Full-Stack / Backend | FastAPI backend, Streamlit UI, service layering, deployment-ready structure |
-| Data Analyst / E-commerce Analyst | Product attribute extraction, listing metadata, tags, category/search optimization |
+Python 3.11+ and Node.js 20+ are expected. In PowerShell:
 
-## AI Problem Solved
+```powershell
+git clone https://github.com/Praciller/AI-Product-Listing-Assistant.git
+cd AI-Product-Listing-Assistant
 
-E-commerce sellers need consistent product listings, but writing titles, descriptions, and tags from images is slow and inconsistent. This app uses a vision-language model to inspect a product image and generate listing-ready content in multiple languages.
+python -m pip install -r api/requirements.txt
+npm ci --prefix frontend
+
+$env:AI_PROVIDER="mock"
+$env:MOCK_AI_MODE="true"
+$env:ENABLE_EXTERNAL_AI="false"
+
+python -m uvicorn main:app --app-dir api --reload
+```
+
+In a second PowerShell window:
+
+```powershell
+cd AI-Product-Listing-Assistant
+$env:NEXT_PUBLIC_API_URL="http://localhost:8000"
+npm run dev --prefix frontend
+```
+
+Open `http://localhost:3000`. No `.env` file is required. Use `fixtures/images/synthetic_desk_organizer.ppm` for a synthetic upload.
+
+## Deterministic evidence
+
+```powershell
+python scripts/generate_local_product_listing_report.py
+Get-Content reports/local_product_listing_report.md
+```
+
+The ignored report records the synthetic fixture metadata, deterministic draft, warnings, validation status, and `external_calls=0` provider trace. See [local review](docs/local_review.md) for the API smoke test.
+
+## Optional Gemini mode
+
+Gemini is never selected only because an API key exists. Set every opt-in value explicitly:
+
+```powershell
+$env:AI_PROVIDER="gemini"
+$env:MOCK_AI_MODE="false"
+$env:ENABLE_EXTERNAL_AI="true"
+$env:GOOGLE_API_KEY="your_google_ai_studio_key_here"
+python -m uvicorn main:app --app-dir api --reload
+```
+
+If the key or external-AI opt-in is missing, startup fails with a configuration error. Provider failures return a generic error and do not expose secret values.
 
 ## Architecture
 
 ```text
-Product image
-  -> Streamlit upload UI
-  -> FastAPI endpoint
-  -> ProductAnalysisManager
-  -> ResilientProductAnalysisService
-  -> Gemini Vision prompt
-  -> Structured title, description, tags
-  -> UI result display / API response
+Synthetic or user-selected image
+  -> Next.js upload UI
+  -> FastAPI /generate-product-info
+  -> explicit provider router
+     -> mock: deterministic local draft, no network
+     -> gemini: optional image analysis
+  -> validated title, description, tags, warnings, trace
 ```
 
-## AI and Data Flow
+## Verification
 
-- Accepts product image uploads from the web UI or API.
-- Sends the image to Gemini with listing-specific instructions.
-- Generates title, description, and search tags.
-- Supports multilingual output for international storefronts.
-- Wraps AI calls with retry/circuit-breaker patterns to reduce failure impact.
-- Exposes API endpoints for integration with storefront, ERP, or catalog systems.
-
-## Key Engineering Highlights
-
-- FastAPI backend separated from Streamlit presentation layer.
-- Service layer for Gemini integration.
-- Manager layer for business logic and validation.
-- Resilience layer with retry and circuit-breaker behavior.
-- Structured logging and health endpoints.
-- Unit, integration, and E2E test structure.
-- Type hints and Pydantic-style API boundaries.
-
-## Supported Outputs
-
-| Output | Purpose |
-| --- | --- |
-| Product title | Short, SEO-friendly listing name |
-| Description | Buyer-facing product copy |
-| Tags | Search and marketplace discovery keywords |
-| Language variants | Localized content generation |
-
-## Tech Stack
-
-| Layer | Tools |
-| --- | --- |
-| AI | Google Gemini 2.0 Flash Vision |
-| Backend | Python, FastAPI, Uvicorn |
-| Frontend | Streamlit |
-| Resilience | Retry logic, circuit breaker pattern, structured logging |
-| Testing | pytest, Playwright, mocked AI responses |
-| Quality | Black, isort, Ruff, mypy-style type hints |
-
-## Evaluation and Testing
-
-Recommended AI evaluation cases:
-
-| Case | Expected behavior |
-| --- | --- |
-| Clear product image | Accurate title, description, and tags |
-| Ambiguous product | Conservative wording without hallucinated details |
-| Thai output | Natural Thai listing copy and relevant tags |
-| Low-quality image | Controlled error or cautious response |
-| Repeated API failure | Circuit breaker prevents repeated cascading failures |
-
-Run tests:
-
-```bash
-make test-all
-# or
-pytest tests/ -v
+```powershell
+python -m unittest discover -s tests -v
+python scripts/check_repo_guardrails.py
+python scripts/generate_local_product_listing_report.py
+npm run lint --prefix frontend
+npm run build --prefix frontend
+git diff --check
 ```
 
-Run with coverage:
+CI runs the same mock-only path without secrets.
 
-```bash
-pytest tests/ -v --cov=. --cov-report=term-missing
-```
+## Privacy and safety
 
-## Local Setup
+- Uploaded images are processed in memory and are not written by the API.
+- Upload, generated-report, cache, database, environment, and build paths are ignored.
+- Repository guardrails reject secret-shaped values, private upload paths, unapproved images, local databases, files over 5 MiB, and unsafe unqualified claims.
+- Only synthetic fixtures and documented UI screenshots belong in the repository.
 
-```bash
-git clone https://github.com/Praciller/AI-Product-Listing-Assistant.git
-cd AI-Product-Listing-Assistant
-```
+## Limitations
 
-Install dependencies:
+- Mock mode proves routing, schema, UI integration, and deterministic evidence; it does not infer pixels.
+- Gemini output can hallucinate attributes and must be reviewed before publication.
+- Multilingual wording is generated, not professionally translated or culturally validated.
+- No marketplace acceptance, legal compliance, conversion lift, or search ranking is promised.
+- The project has no retry or circuit-breaker implementation; provider failures are surfaced cleanly.
 
-```bash
-uv sync
-```
+## Documentation
 
-Create `.env`:
-
-```env
-GOOGLE_API_KEY=your_google_ai_studio_key
-```
-
-Run backend:
-
-```bash
-uv run python main.py
-```
-
-Run frontend:
-
-```bash
-uv run streamlit run streamlit_app.py
-```
-
-Open:
-
-- API: `http://localhost:8000`
-- Streamlit UI: `http://localhost:8501`
-- API docs: `http://localhost:8000/docs`
-
-## Deployment
-
-Deployment options:
-
-- Streamlit Cloud for the UI.
-- Railway, Render, Fly.io, or similar for the FastAPI backend.
-- Vercel/other frontend hosting if the UI is adapted.
-
-Production checklist:
-
-- Configure `GOOGLE_API_KEY` as a secret.
-- Set CORS origins for the deployed frontend.
-- Add rate limiting for public endpoints.
-- Keep sample prompts and AI outputs for regression testing.
-
-## Why This Repo Matters
-
-This repo is a strong GenAI Engineer signal because it moves beyond text chat: it uses image input, multilingual output, API design, error handling, and tests. It is also useful for AI Engineer and backend/full-stack roles because it shows how to wrap an LLM/VLM in a maintainable service.
+- [Local review guide](docs/local_review.md)
+- [Portfolio reviewer checklist](docs/portfolio_review.md)
+- [Product listing methodology](docs/product_listing_methodology.md)
 
 ## License
 

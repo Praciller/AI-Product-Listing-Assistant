@@ -1,0 +1,11 @@
+{
+  "fixture_id": "synthetic-desk-organizer-v1",
+  "synthetic": true,
+  "language": "en",
+  "known_context": {
+    "category": "desk organizer",
+    "style": "minimalist",
+    "intended_use": "small desk-item storage"
+  },
+  "unknowns": ["material", "dimensions", "color accuracy", "durability"]
+}

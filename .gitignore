@@ -19,8 +19,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -167,17 +167,20 @@ tmp/
 ehthumbs.db
 Thumbs.db
 
-# Test files
-test_*.py
-*_test.py
-tests/
-test/
+# Test artifacts
 
 # Sample data and uploads
 uploads/
+uploaded-images/
+uploaded_product_images/
 samples/
 dataset/
 data/
+reports/
+generated/
+*.db
+*.sqlite
+*.sqlite3
 
 # Logs
 logs/
@@ -228,6 +231,8 @@ next-env.d.ts
 # Screenshots and test files
 screenshots/
 frontend/screenshots/
+e2e-tests/playwright-report/
+e2e-tests/test-results/
 *.png
 *.jpg
 *.jpeg
@@ -236,3 +241,5 @@ frontend/screenshots/
 !public/*.jpg
 !public/*.jpeg
 !public/*.gif
+!docs/screenshots/*.jpg
+!fixtures/images/*.ppm

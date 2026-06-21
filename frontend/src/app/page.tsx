@@ -37,6 +37,10 @@ interface AnalysisResult {
   title: string;
   description: string;
   tags: string[];
+  warnings?: string[];
+  validation_status?: string;
+  provider?: string;
+  provider_trace?: string;
 }
 
 interface ApiResponse {
@@ -366,6 +370,30 @@ export default function Home() {
                       </div>
                     </div>
 
+                    {(result.provider || result.validation_status) && (
+                      <div className="flex flex-wrap gap-2">
+                        {result.provider && (
+                          <Badge variant="outline">Provider: {result.provider}</Badge>
+                        )}
+                        {result.validation_status && (
+                          <Badge variant="outline">
+                            Status: {result.validation_status}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+
+                    {result.warnings && result.warnings.length > 0 && (
+                      <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+                        <p className="font-semibold">Review before publishing</p>
+                        <ul className="mt-1 list-disc pl-5">
+                          {result.warnings.map((warning) => (
+                            <li key={warning}>{warning}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     {/* Copy Button */}
                     <Button
                       onClick={handleCopy}
@@ -421,8 +449,7 @@ export default function Home() {
       <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-16">
         <div className="container mx-auto px-4 py-6">
           <p className="text-center text-muted-foreground">
-            Made with ❤️ for e-commerce sellers worldwide | Powered by Google
-            Gemini AI
+            Mock-first portfolio demo | Generated listings require human review
           </p>
         </div>
       </footer>

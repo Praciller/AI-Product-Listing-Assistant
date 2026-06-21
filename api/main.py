@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
 from dotenv import load_dotenv
-from gemini_service import GeminiService
+from product_listing_service import ProductListingService
 
 # Load environment variables
 load_dotenv()
@@ -20,11 +20,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Gemini service
-gemini_service = GeminiService()
+product_listing_service = ProductListingService()
 
 app = FastAPI(
     title="AI Product Listing Assistant API",
-    description="API for generating product listings using Google Gemini AI",
+    description="API for generating draft product listings from images",
     version="2.0.0"
 )
 
@@ -44,9 +44,9 @@ async def root():
         "message": "AI Product Listing Assistant API",
         "status": "running",
         "version": "2.0.0",
-        "environment": "production",
-        "ai_service": "Google Gemini Vision API",
-        "features": ["real_image_analysis", "multi_language_support", "accurate_product_listings"]
+        "environment": os.environ.get("VERCEL_ENV", "local"),
+        "ai_provider": product_listing_service.provider,
+        "features": ["mock_first", "optional_image_analysis", "multi_language_output"]
     }
 
 @app.get("/health")
@@ -66,7 +66,7 @@ async def generate_product_info(
     """Generate product information from uploaded image"""
     
     try:
-        logger.info(f"📸 Processing image: {file.filename}, Language: {language}")
+        logger.info("Processing image in language %s", language)
         
         # Validate file type
         if not file.content_type or not file.content_type.startswith('image/'):
@@ -85,8 +85,8 @@ async def generate_product_info(
             )
         
         # Analyze image using Google Gemini Vision API
-        logger.info(f"🤖 Starting AI analysis for {file.filename} ({len(image_data)} bytes)")
-        analysis_data = await gemini_service.analyze_product_image(image_data, language)
+        logger.info("Starting product analysis (%s bytes)", len(image_data))
+        analysis_data = await product_listing_service.analyze_product_image(image_data, language)
 
         # Return response in the format expected by the frontend
         result = {
@@ -104,12 +104,12 @@ async def generate_product_info(
             "error": e.detail
         }
         return JSONResponse(content=error_response, status_code=e.status_code)
-    except Exception as e:
-        logger.error(f"❌ Error processing request: {str(e)}")
+    except Exception:
+        logger.error("Product analysis failed")
         # Return error in the format expected by the frontend
         error_response = {
             "success": False,
-            "error": f"Analysis failed: {str(e)}"
+            "error": "Analysis failed. Check provider configuration and try again."
         }
         return JSONResponse(content=error_response, status_code=500)
 
