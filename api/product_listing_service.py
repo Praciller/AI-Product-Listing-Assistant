@@ -56,13 +56,18 @@ class ProductListingService:
             )
 
     async def analyze_product_image(
-        self, image_data: bytes, language: str = "en"
+        self,
+        image_data: bytes,
+        language: str = "en",
+        mime_type: str = "image/jpeg",
     ) -> dict[str, Any]:
         if self.provider == "mock":
             return self._mock_listing(language)
 
         if self.provider == "openrouter":
-            return await asyncio.to_thread(self._analyze_with_openrouter, image_data, language)
+            return await asyncio.to_thread(
+                self._analyze_with_openrouter, image_data, language, mime_type
+            )
 
         return await asyncio.to_thread(self._analyze_with_gemini, image_data, language)
 
@@ -83,13 +88,9 @@ class ProductListingService:
                 "Gemini analysis failed. Check provider configuration and try again."
             ) from exc
 
-    def _analyze_with_openrouter(self, image_data: bytes, language: str) -> dict[str, Any]:
-        from PIL import Image
-
-        image = Image.open(io.BytesIO(image_data)).convert("RGB")
-        image.thumbnail((1024, 1024))
-        encoded_image = io.BytesIO()
-        image.save(encoded_image, format="JPEG", quality=90)
+    def _analyze_with_openrouter(
+        self, image_data: bytes, language: str, mime_type: str
+    ) -> dict[str, Any]:
         payload = {
             "model": self.model,
             "messages": [
@@ -100,8 +101,8 @@ class ProductListingService:
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": "data:image/jpeg;base64,"
-                                + base64.b64encode(encoded_image.getvalue()).decode("ascii")
+                                "url": f"data:{mime_type};base64,"
+                                + base64.b64encode(image_data).decode("ascii")
                             },
                         },
                     ],

@@ -100,7 +100,7 @@ class ProductListingServiceTests(unittest.IsolatedAsyncioTestCase):
                 return_value=FakeResponse(),
             ) as urlopen:
                 result = await ProductListingService().analyze_product_image(
-                    b"P6\n1 1\n255\n\x00\x00\x00", "en"
+                    b"synthetic-image", "en", "image/png"
                 )
 
         self.assertEqual(result["provider"], "openrouter")
@@ -110,6 +110,12 @@ class ProductListingServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             urlopen.call_args.args[0].full_url,
             "https://openrouter.ai/api/v1/chat/completions",
+        )
+        request_body = json.loads(urlopen.call_args.args[0].data)
+        self.assertTrue(
+            request_body["messages"][0]["content"][1]["image_url"]["url"].startswith(
+                "data:image/png;base64,"
+            )
         )
 
     async def test_mock_mode_overrides_gemini_configuration(self):

@@ -83,7 +83,9 @@ async def generate_product_info(
         
         # Analyze image using the explicitly selected provider.
         logger.info("Starting product analysis (%s bytes)", len(image_data))
-        analysis_data = await product_listing_service.analyze_product_image(image_data, language)
+        analysis_data = await product_listing_service.analyze_product_image(
+            image_data, language, file.content_type
+        )
 
         # Return response in the format expected by the frontend
         result = {
