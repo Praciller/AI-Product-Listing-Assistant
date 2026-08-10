@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-AI Product Listing Assistant API with Google Gemini Vision integration
-Real AI-powered product image analysis for e-commerce listings
-"""
+"""AI Product Listing Assistant API with optional multimodal providers."""
 
 import os
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
@@ -19,7 +16,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Gemini service
+# Initialize the explicitly selected mock or external service.
 product_listing_service = ProductListingService()
 
 app = FastAPI(
@@ -84,9 +81,11 @@ async def generate_product_info(
                 detail="Empty file uploaded. Please select a valid image."
             )
         
-        # Analyze image using Google Gemini Vision API
+        # Analyze image using the explicitly selected provider.
         logger.info("Starting product analysis (%s bytes)", len(image_data))
-        analysis_data = await product_listing_service.analyze_product_image(image_data, language)
+        analysis_data = await product_listing_service.analyze_product_image(
+            image_data, language, file.content_type
+        )
 
         # Return response in the format expected by the frontend
         result = {

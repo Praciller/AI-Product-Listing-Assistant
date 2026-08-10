@@ -5,7 +5,7 @@ Portfolio demonstration of a mock-first multimodal listing workflow. A FastAPI b
 ## What this demonstrates
 
 - Explicit provider routing with offline mock mode as the safe default.
-- Optional Gemini image analysis behind three opt-in settings.
+- Optional Gemini or OpenRouter image analysis behind explicit opt-in settings.
 - Structured multilingual draft output with warnings and provider trace.
 - Synthetic test evidence, privacy guardrails, backend tests, and CI.
 - FastAPI service boundaries and a Next.js upload interface.
@@ -63,6 +63,21 @@ python -m uvicorn main:app --app-dir api --reload
 
 If the key or external-AI opt-in is missing, startup fails with a configuration error. Provider failures return a generic error and do not expose secret values.
 
+## Optional OpenRouter free mode
+
+OpenRouter is also opt-in and keeps the deterministic mock path as the default. The audited free multimodal model was `google/gemma-4-26b-a4b-it:free`:
+
+```powershell
+$env:AI_PROVIDER="openrouter"
+$env:MOCK_AI_MODE="false"
+$env:ENABLE_EXTERNAL_AI="true"
+$env:OPENROUTER_API_KEY="your_openrouter_key_here"
+$env:OPENROUTER_MODEL="google/gemma-4-26b-a4b-it:free"
+python -m uvicorn main:app --app-dir api --reload
+```
+
+Use only a live `:free` model when free-only operation is required. Never commit the key or put it in a client-exposed environment variable.
+
 ## Architecture
 
 ```text
@@ -71,7 +86,7 @@ Synthetic or user-selected image
   -> FastAPI /generate-product-info
   -> explicit provider router
      -> mock: deterministic local draft, no network
-     -> gemini: optional image analysis
+     -> gemini/openrouter: optional image analysis
   -> validated title, description, tags, warnings, trace
 ```
 
