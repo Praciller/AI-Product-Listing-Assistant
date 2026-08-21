@@ -1,5 +1,5 @@
-import os
 import json
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -16,7 +16,9 @@ class ProductListingServiceTests(unittest.IsolatedAsyncioTestCase):
             "AI_PROVIDER": "mock",
             "MOCK_AI_MODE": "true",
             "ENABLE_EXTERNAL_AI": "false",
-            "GOOGLE_API_KEY": "",
+            "EXTERNAL_AI_API_KEY": "",
+            "EXTERNAL_AI_ENDPOINT": "",
+            "EXTERNAL_AI_MODEL": "",
         }
 
         with patch.dict(os.environ, settings, clear=False):
@@ -27,48 +29,45 @@ class ProductListingServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(first, second)
         self.assertEqual(first["provider"], "mock")
         self.assertEqual(first["validation_status"], "draft")
-        self.assertEqual(set(first), {
-            "title", "description", "tags", "language", "warnings",
-            "validation_status", "provider", "provider_trace",
-        })
+        self.assertEqual(
+            set(first),
+            {
+                "title",
+                "description",
+                "tags",
+                "language",
+                "warnings",
+                "validation_status",
+                "provider",
+                "provider_trace",
+            },
+        )
 
-    def test_explicit_gemini_mode_requires_api_key(self):
+    def test_external_mode_requires_complete_configuration(self):
         settings = {
-            "AI_PROVIDER": "gemini",
+            "AI_PROVIDER": "external",
             "MOCK_AI_MODE": "false",
             "ENABLE_EXTERNAL_AI": "true",
-            "GOOGLE_API_KEY": "",
+            "EXTERNAL_AI_API_KEY": "",
+            "EXTERNAL_AI_ENDPOINT": "",
+            "EXTERNAL_AI_MODEL": "",
         }
 
         with patch.dict(os.environ, settings, clear=False):
             with self.assertRaisesRegex(
                 ProviderConfigurationError,
-                "GOOGLE_API_KEY is required when AI_PROVIDER=gemini",
+                "Missing external inference configuration",
             ):
                 ProductListingService()
 
-    def test_explicit_openrouter_mode_requires_api_key(self):
+    async def test_external_mode_validates_structured_response(self):
         settings = {
-            "AI_PROVIDER": "openrouter",
+            "AI_PROVIDER": "external",
             "MOCK_AI_MODE": "false",
             "ENABLE_EXTERNAL_AI": "true",
-            "OPENROUTER_API_KEY": "",
-        }
-
-        with patch.dict(os.environ, settings, clear=False):
-            with self.assertRaisesRegex(
-                ProviderConfigurationError,
-                "OPENROUTER_API_KEY is required when AI_PROVIDER=openrouter",
-            ):
-                ProductListingService()
-
-    async def test_openrouter_mode_validates_openai_compatible_response(self):
-        settings = {
-            "AI_PROVIDER": "openrouter",
-            "MOCK_AI_MODE": "false",
-            "ENABLE_EXTERNAL_AI": "true",
-            "OPENROUTER_API_KEY": "synthetic-openrouter-key",
-            "OPENROUTER_MODEL": "google/gemma-4-26b-a4b-it:free",
+            "EXTERNAL_AI_API_KEY": "synthetic-key",
+            "EXTERNAL_AI_ENDPOINT": "https://inference.example.test/v1/messages",
+            "EXTERNAL_AI_MODEL": "vision-model",
         }
         response_body = {
             "choices": [
@@ -103,13 +102,13 @@ class ProductListingServiceTests(unittest.IsolatedAsyncioTestCase):
                     b"synthetic-image", "en", "image/png"
                 )
 
-        self.assertEqual(result["provider"], "openrouter")
+        self.assertEqual(result["provider"], "external")
         self.assertEqual(result["validation_status"], "draft")
         self.assertEqual(result["tags"], ["desk", "storage"])
         self.assertEqual(urlopen.call_count, 1)
         self.assertEqual(
             urlopen.call_args.args[0].full_url,
-            "https://openrouter.ai/api/v1/chat/completions",
+            "https://inference.example.test/v1/messages",
         )
         request_body = json.loads(urlopen.call_args.args[0].data)
         self.assertTrue(
@@ -118,16 +117,20 @@ class ProductListingServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
-    async def test_mock_mode_overrides_gemini_configuration(self):
+    async def test_mock_mode_overrides_external_configuration(self):
         settings = {
-            "AI_PROVIDER": "gemini",
+            "AI_PROVIDER": "external",
             "MOCK_AI_MODE": "true",
             "ENABLE_EXTERNAL_AI": "true",
-            "GOOGLE_API_KEY": "configured-but-unused",
+            "EXTERNAL_AI_API_KEY": "configured-but-unused",
+            "EXTERNAL_AI_ENDPOINT": "https://inference.example.test/v1/messages",
+            "EXTERNAL_AI_MODEL": "vision-model",
         }
 
         with patch.dict(os.environ, settings, clear=False):
-            result = await ProductListingService().analyze_product_image(b"low-quality", "th")
+            result = await ProductListingService().analyze_product_image(
+                b"low-quality", "th"
+            )
 
         self.assertEqual(result["provider"], "mock")
         self.assertEqual(result["language"], "Thai")

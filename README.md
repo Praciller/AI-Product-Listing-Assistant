@@ -4,9 +4,9 @@ Portfolio demonstration of a mock-first multimodal listing workflow. A FastAPI b
 
 ## What this demonstrates
 
-- Explicit provider routing with offline mock mode as the safe default.
-- Optional Gemini or OpenRouter image analysis behind explicit opt-in settings.
-- Structured multilingual draft output with warnings and provider trace.
+- Explicit inference routing with offline mock mode as the safe default.
+- Optional external image analysis through a vendor-neutral configurable endpoint.
+- Structured multilingual draft output with warnings and routing trace.
 - Synthetic test evidence, privacy guardrails, backend tests, and CI.
 - FastAPI service boundaries and a Next.js upload interface.
 
@@ -47,36 +47,25 @@ python scripts/generate_local_product_listing_report.py
 Get-Content reports/local_product_listing_report.md
 ```
 
-The ignored report records the synthetic fixture metadata, deterministic draft, warnings, validation status, and `external_calls=0` provider trace. See [local review](docs/local_review.md) for the API smoke test.
+The ignored report records the synthetic fixture metadata, deterministic draft, warnings, validation status, and `external_calls=0` routing trace. See [local review](docs/local_review.md) for the API smoke test.
 
-## Optional Gemini mode
+## Optional external inference
 
-Gemini is never selected only because an API key exists. Set every opt-in value explicitly:
+External inference is never selected only because a key exists. Set every opt-in value explicitly:
 
 ```powershell
-$env:AI_PROVIDER="gemini"
+$env:AI_PROVIDER="external"
 $env:MOCK_AI_MODE="false"
 $env:ENABLE_EXTERNAL_AI="true"
-$env:GOOGLE_API_KEY="your_google_ai_studio_key_here"
+$env:EXTERNAL_AI_ENDPOINT="https://your-inference-endpoint.example/v1/messages"
+$env:EXTERNAL_AI_API_KEY="your_server_side_key_here"
+$env:EXTERNAL_AI_MODEL="your_vision_model"
 python -m uvicorn main:app --app-dir api --reload
 ```
 
-If the key or external-AI opt-in is missing, startup fails with a configuration error. Provider failures return a generic error and do not expose secret values.
+The endpoint must accept the documented JSON request shape and return a structured response containing a message payload with JSON listing content. If required configuration is missing, startup fails with a configuration error. External failures return a generic error and do not expose secret values.
 
-## Optional OpenRouter free mode
-
-OpenRouter is also opt-in and keeps the deterministic mock path as the default. The audited free multimodal model was `google/gemma-4-26b-a4b-it:free`:
-
-```powershell
-$env:AI_PROVIDER="openrouter"
-$env:MOCK_AI_MODE="false"
-$env:ENABLE_EXTERNAL_AI="true"
-$env:OPENROUTER_API_KEY="your_openrouter_key_here"
-$env:OPENROUTER_MODEL="google/gemma-4-26b-a4b-it:free"
-python -m uvicorn main:app --app-dir api --reload
-```
-
-Use only a live `:free` model when free-only operation is required. Never commit the key or put it in a client-exposed environment variable.
+Never commit the key or place it in a client-exposed environment variable.
 
 ## Architecture
 
@@ -84,9 +73,9 @@ Use only a live `:free` model when free-only operation is required. Never commit
 Synthetic or user-selected image
   -> Next.js upload UI
   -> FastAPI /generate-product-info
-  -> explicit provider router
+  -> explicit inference router
      -> mock: deterministic local draft, no network
-     -> gemini/openrouter: optional image analysis
+     -> external: optional configurable image analysis
   -> validated title, description, tags, warnings, trace
 ```
 
@@ -109,14 +98,15 @@ CI runs the same mock-only path without secrets.
 - Upload, generated-report, cache, database, environment, and build paths are ignored.
 - Repository guardrails reject secret-shaped values, private upload paths, unapproved images, local databases, files over 5 MiB, and unsafe unqualified claims.
 - Only synthetic fixtures and documented UI screenshots belong in the repository.
+- External inference sends image content to the configured endpoint and should be enabled only after reviewing that service's privacy and retention terms.
 
 ## Limitations
 
 - Mock mode proves routing, schema, UI integration, and deterministic evidence; it does not infer pixels.
-- Gemini output can hallucinate attributes and must be reviewed before publication.
+- External generated output can hallucinate attributes and must be reviewed before publication.
 - Multilingual wording is generated, not professionally translated or culturally validated.
 - No marketplace acceptance, legal compliance, conversion lift, or search ranking is promised.
-- The project has no retry or circuit-breaker implementation; provider failures are surfaced cleanly.
+- The project has no retry or circuit-breaker implementation; external failures are surfaced cleanly.
 
 ## Documentation
 
