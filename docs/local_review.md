@@ -1,6 +1,6 @@
 # Local Review
 
-This path is local, deterministic, and does not contact an AI provider.
+This path is local, deterministic, and does not contact an external inference service.
 
 ## Setup and run
 
@@ -12,7 +12,9 @@ npm ci --prefix frontend
 $env:AI_PROVIDER="mock"
 $env:MOCK_AI_MODE="true"
 $env:ENABLE_EXTERNAL_AI="false"
-Remove-Item Env:GOOGLE_API_KEY -ErrorAction SilentlyContinue
+Remove-Item Env:EXTERNAL_AI_API_KEY -ErrorAction SilentlyContinue
+Remove-Item Env:EXTERNAL_AI_ENDPOINT -ErrorAction SilentlyContinue
+Remove-Item Env:EXTERNAL_AI_MODEL -ErrorAction SilentlyContinue
 
 python -m uvicorn main:app --app-dir api
 ```
