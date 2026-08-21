@@ -22,13 +22,13 @@ Get-Content reports/local_product_listing_report.md
 
 | Skill | Repository evidence |
 | --- | --- |
-| GenAI integration | Explicit mock/Gemini routing and structured output validation |
-| Multimodal API | In-memory image upload boundary and optional Gemini image path |
-| Safety | External-provider opt-in, generic provider errors, no filename logging |
-| Evaluation | Synthetic fixture, deterministic output, warnings, provider trace |
+| Generative workflow | Explicit mock/external routing and structured output validation |
+| Multimodal API | In-memory image upload boundary and optional external image path |
+| Safety | Explicit external opt-in, generic errors, no filename logging |
+| Evaluation | Synthetic fixture, deterministic output, warnings, routing trace |
 | Full stack | FastAPI backend and Next.js upload interface |
 | Delivery | Backend tests, frontend lint/build, guardrail, GitHub Actions CI |
 
 ## Known limitations
 
-Mock mode does not inspect pixels. Gemini drafts may hallucinate. Language variants are not professionally translated. No marketplace approval, legal compliance, ranking, or sales outcome is guaranteed. Uploaded content should be treated as sensitive whenever optional external mode is used.
+Mock mode does not inspect pixels. External drafts may hallucinate. Language variants are not professionally translated. No marketplace approval, legal compliance, ranking, or sales outcome is guaranteed. Uploaded content should be treated as sensitive whenever optional external mode is used.
