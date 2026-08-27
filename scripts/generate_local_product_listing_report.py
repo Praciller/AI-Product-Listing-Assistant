@@ -21,6 +21,7 @@ async def main() -> None:
     listing = await ProductListingService().analyze_product_image(
         image_path.read_bytes(), fixture["language"]
     )
+    listing_data = listing.model_dump()
     evaluation = evaluate_listing(listing, fixture["evaluation"])
 
     lines = [
@@ -29,8 +30,8 @@ async def main() -> None:
         f"- Fixture: `{fixture['fixture_id']}` (synthetic)",
         "- Deterministic: yes",
         "- External AI calls: none",
-        f"- Provider trace: `{listing['provider_trace']}`",
-        f"- Validation status: `{listing['validation_status']}`",
+        f"- Provider trace: `{listing_data['provider_trace']}`",
+        f"- Validation status: `{listing_data['validation_status']}`",
         "",
         "## Resilience boundary",
         "",
@@ -65,15 +66,15 @@ async def main() -> None:
         "",
         "## Generated draft",
         "",
-        f"**Title:** {listing['title']}",
+        f"**Title:** {listing_data['title']}",
         "",
-        listing["description"],
+        listing_data["description"],
         "",
-        f"**Tags:** {', '.join(listing['tags'])}",
+        f"**Tags:** {', '.join(listing_data['tags'])}",
         "",
         "## Warnings and limitations",
         "",
-        *[f"- {warning}" for warning in listing["warnings"]],
+        *[f"- {warning}" for warning in listing_data["warnings"]],
         "- Demo content is not guaranteed to satisfy legal or marketplace requirements.",
         "",
     ]

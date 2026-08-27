@@ -112,21 +112,15 @@ class ResilienceConfig:
             choose(
                 "EXTERNAL_AI_CONNECT_TIMEOUT_SECONDS",
                 "EXTERNAL_AI_CONNECTION_TIMEOUT_SECONDS",
-                "GEMINI_CONNECT_TIMEOUT_SECONDS",
-                "GEMINI_CONNECTION_TIMEOUT_SECONDS",
             )
         )
         request_name = choose(
             "EXTERNAL_AI_REQUEST_TIMEOUT_SECONDS",
             "EXTERNAL_AI_OVERALL_TIMEOUT_SECONDS",
-            "GEMINI_REQUEST_TIMEOUT_SECONDS",
-            "GEMINI_OVERALL_TIMEOUT_SECONDS",
         )
         read_name = choose(
             "EXTERNAL_AI_READ_TIMEOUT_SECONDS",
             "EXTERNAL_AI_TIMEOUT_SECONDS",
-            "GEMINI_READ_TIMEOUT_SECONDS",
-            "GEMINI_TIMEOUT_SECONDS",
         )
         return cls(
             connect_timeout_seconds=_read_float_setting(
@@ -139,49 +133,34 @@ class ResilienceConfig:
                 request_name, 45.0, 0.01, 300.0
             ),
             max_retries=_read_int_setting(
-                choose("EXTERNAL_AI_MAX_RETRIES", "GEMINI_MAX_RETRIES"), 1, 0, 3
+                choose("EXTERNAL_AI_MAX_RETRIES"), 1, 0, 3
             ),
             retry_backoff_seconds=_read_float_setting(
-                choose(
-                    "EXTERNAL_AI_RETRY_BACKOFF_SECONDS",
-                    "GEMINI_RETRY_BACKOFF_SECONDS",
-                ),
+                choose("EXTERNAL_AI_RETRY_BACKOFF_SECONDS"),
                 0.25,
                 0.0,
                 5.0,
             ),
             retry_max_backoff_seconds=_read_float_setting(
-                choose(
-                    "EXTERNAL_AI_RETRY_MAX_BACKOFF_SECONDS",
-                    "GEMINI_RETRY_MAX_BACKOFF_SECONDS",
-                ),
+                choose("EXTERNAL_AI_RETRY_MAX_BACKOFF_SECONDS"),
                 5.0,
                 0.0,
                 30.0,
             ),
             retry_jitter_seconds=_read_float_setting(
-                choose(
-                    "EXTERNAL_AI_RETRY_JITTER_SECONDS",
-                    "GEMINI_RETRY_JITTER_SECONDS",
-                ),
+                choose("EXTERNAL_AI_RETRY_JITTER_SECONDS"),
                 0.1,
                 0.0,
                 5.0,
             ),
             circuit_failure_threshold=_read_int_setting(
-                choose(
-                    "EXTERNAL_AI_CIRCUIT_FAILURE_THRESHOLD",
-                    "GEMINI_CIRCUIT_FAILURE_THRESHOLD",
-                ),
+                choose("EXTERNAL_AI_CIRCUIT_FAILURE_THRESHOLD"),
                 3,
                 1,
                 10,
             ),
             circuit_cooldown_seconds=_read_float_setting(
-                choose(
-                    "EXTERNAL_AI_CIRCUIT_COOLDOWN_SECONDS",
-                    "GEMINI_CIRCUIT_COOLDOWN_SECONDS",
-                ),
+                choose("EXTERNAL_AI_CIRCUIT_COOLDOWN_SECONDS"),
                 30.0,
                 0.01,
                 300.0,

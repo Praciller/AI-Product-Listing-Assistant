@@ -29,9 +29,8 @@ The safe defaults are:
 | Jitter ceiling | 0.1 seconds | 0-5 |
 
 `EXTERNAL_AI_TIMEOUT_SECONDS` is retained as a legacy alias for the read
-timeout when `EXTERNAL_AI_READ_TIMEOUT_SECONDS` is not set. Gemini-prefixed
-settings remain compatibility aliases; new deployments should use
-`EXTERNAL_AI_*` names.
+timeout when `EXTERNAL_AI_READ_TIMEOUT_SECONDS` is not set. New deployments
+should use the explicit `EXTERNAL_AI_*` names.
 
 ## Retry matrix
 
