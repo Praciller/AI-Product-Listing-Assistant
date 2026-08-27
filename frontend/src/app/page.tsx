@@ -114,7 +114,8 @@ export default function Home() {
         if (response.status === 429) {
           const errorData = await response.json().catch(() => ({}));
           setError(
-            errorData.detail ||
+            errorData.error ||
+              errorData.detail ||
               "API quota exceeded. Please try again later or upgrade your plan."
           );
           return;
@@ -125,7 +126,11 @@ export default function Home() {
           return;
         } else {
           const errorData = await response.json().catch(() => ({}));
-          setError(errorData.detail || `Server error: ${response.status}`);
+          setError(
+            errorData.error ||
+              errorData.detail ||
+              `Server error: ${response.status}`
+          );
           return;
         }
       }
@@ -242,7 +247,7 @@ export default function Home() {
                     <Input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/png,image/webp"
                       onChange={handleFileSelect}
                       className="hidden"
                       id="file-upload"
@@ -256,7 +261,7 @@ export default function Home() {
                       Choose Image
                     </Button>
                     <p className="text-sm text-muted-foreground">
-                      Supports PNG, JPG, JPEG, WebP, GIF
+                      Supports JPEG, PNG, and WebP up to 5 MiB
                     </p>
                   </div>
                 </div>

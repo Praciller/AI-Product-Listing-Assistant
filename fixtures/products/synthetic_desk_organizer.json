@@ -7,5 +7,34 @@
     "style": "minimalist",
     "intended_use": "small desk-item storage"
   },
-  "unknowns": ["material", "dimensions", "color accuracy", "durability"]
+  "unknowns": ["material", "dimensions", "color accuracy", "durability"],
+  "evaluation": {
+    "scope": "Contract-level synthetic fixture; mock mode does not infer image pixels.",
+    "fields": [
+      {
+        "field": "title",
+        "match": "exact",
+        "expected": "Minimalist Reusable Desk Organizer",
+        "sources": ["title"]
+      },
+      {
+        "field": "category",
+        "match": "contains",
+        "expected": "desk organizer",
+        "sources": ["title", "tags"]
+      },
+      {
+        "field": "style",
+        "match": "contains",
+        "expected": "minimalist",
+        "sources": ["title", "tags"]
+      },
+      {
+        "field": "intended_use",
+        "match": "contains",
+        "expected": "storage",
+        "sources": ["description", "tags"]
+      }
+    ]
+  }
 }
