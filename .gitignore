@@ -241,5 +241,8 @@ e2e-tests/test-results/
 !public/*.jpg
 !public/*.jpeg
 !public/*.gif
+!docs/screenshots/
 !docs/screenshots/*.jpg
+!docs/screenshots/*.png
 !fixtures/images/*.ppm
+!fixtures/images/*.png
