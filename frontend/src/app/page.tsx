@@ -49,6 +49,20 @@ interface ApiResponse {
   error?: string;
 }
 
+const SAMPLE_RESULT: AnalysisResult = {
+  title: "Minimalist Reusable Desk Organizer",
+  description:
+    "A clean, space-saving desk organizer designed to keep pens, notes, and everyday essentials neatly arranged. Made with a durable reusable material and a minimalist form that fits modern workspaces.",
+  tags: ["desk organizer", "minimalist", "reusable", "workspace", "storage"],
+  warnings: [
+    "Synthetic fixture: confirm dimensions, material, and color before publishing.",
+    "Draft copy requires human review before publishing.",
+  ],
+  validation_status: "valid",
+  provider: "mock",
+  provider_trace: "deterministic-local-v1",
+};
+
 // Supported languages
 const SUPPORTED_LANGUAGES = {
   English: "en",
@@ -73,6 +87,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isSample, setIsSample] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,6 +96,7 @@ export default function Home() {
       setSelectedFile(file);
       setError(null);
       setResult(null);
+      setIsSample(false);
 
       // Create image preview
       const reader = new FileReader();
@@ -91,12 +107,22 @@ export default function Home() {
     }
   };
 
+  const handleTrySample = () => {
+    setSelectedFile(null);
+    setImagePreview("/sample-product.svg");
+    setResult(SAMPLE_RESULT);
+    setError(null);
+    setCopied(false);
+    setIsSample(true);
+  };
+
   const handleAnalyze = async () => {
     if (!selectedFile) return;
 
     setIsAnalyzing(true);
     setError(null);
     setResult(null);
+    setIsSample(false);
 
     try {
       const formData = new FormData();
@@ -255,13 +281,22 @@ export default function Home() {
                     <Button
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
-                      className="mb-2"
+                      className="mb-2 mr-2"
                     >
                       <Upload className="h-4 w-4 mr-2" />
                       Choose Image
                     </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleTrySample}
+                      className="mb-2"
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Try sample product
+                    </Button>
                     <p className="text-sm text-muted-foreground">
-                      Supports JPEG, PNG, and WebP up to 5 MiB
+                      Upload JPEG, PNG, or WebP, or inspect the bundled synthetic sample.
                     </p>
                   </div>
                 </div>
@@ -341,6 +376,19 @@ export default function Home() {
 
                 {result && (
                   <div className="space-y-4">
+                    {isSample && (
+                      <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                            Sample data
+                          </p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            Synthetic fixture; no external API call or visitor data is used.
+                          </p>
+                        </div>
+                        <Badge variant="outline">SAMPLE</Badge>
+                      </div>
+                    )}
                     {/* Title */}
                     <div className="space-y-2">
                       <Label className="text-base font-semibold">
@@ -454,7 +502,7 @@ export default function Home() {
       <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mt-16">
         <div className="container mx-auto px-4 py-6">
           <p className="text-center text-muted-foreground">
-            Mock-first portfolio demo | Generated listings require human review
+            Provider-pluggable AI inference | Generated listings require human review
           </p>
         </div>
       </footer>
