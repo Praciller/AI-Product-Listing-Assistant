@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 650" role="img" aria-labelledby="title desc">
+  <title id="title">Synthetic minimalist desk organizer</title>
+  <desc id="desc">A fictional desk organizer illustration used only for the portfolio sample flow.</desc>
+  <rect width="900" height="650" fill="#f4efe7"/>
+  <rect y="470" width="900" height="180" fill="#d8b08c"/>
+  <rect x="140" y="150" width="620" height="320" rx="28" fill="#f7fafc" stroke="#2f4858" stroke-width="12"/>
+  <rect x="185" y="198" width="160" height="225" rx="20" fill="#e7b75d" stroke="#2f4858" stroke-width="10"/>
+  <rect x="370" y="250" width="120" height="173" rx="16" fill="#ef8f73" stroke="#2f4858" stroke-width="10"/>
+  <rect x="515" y="290" width="190" height="133" rx="16" fill="#7db5a6" stroke="#2f4858" stroke-width="10"/>
+  <path d="M220 174v-55M260 174v-72M300 174v-48" stroke="#2f4858" stroke-width="12" stroke-linecap="round"/>
+  <path d="M408 246v-55M452 246v-76" stroke="#2f4858" stroke-width="12" stroke-linecap="round"/>
+  <path d="M570 286v-58M620 286v-78M670 286v-48" stroke="#2f4858" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="224" cy="116" r="10" fill="#ef8f73"/>
+  <circle cx="260" cy="102" r="10" fill="#7db5a6"/>
+  <circle cx="300" cy="126" r="10" fill="#e7b75d"/>
+  <text x="450" y="535" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="700" fill="#2f4858">SYNTHETIC SAMPLE PRODUCT</text>
+  <text x="450" y="575" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" fill="#486581">Minimalist reusable desk organizer · fictional fixture</text>
+</svg>

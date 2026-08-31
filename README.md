@@ -2,6 +2,16 @@
 
 Portfolio demonstration of a mock-first multimodal listing workflow. A FastAPI backend and Next.js interface turn an uploaded image into a structured draft title, description, and tags. The default path is deterministic, offline, and requires no API key, paid service, or real product photo.
 
+## Recruiter snapshot
+
+**Signal:** Multimodal image-to-structured-product-listing workflow with validation and provider-pluggable inference.
+
+[Repository](https://github.com/Praciller/AI-Product-Listing-Assistant) · [Live demo](https://ai-product-listing-assistant.vercel.app/)
+
+**What this demonstrates:** bounded image input · typed multilingual draft output · explicit mock-first and provider-routing boundaries.
+
+**Boundary:** draft commerce content for human review; it is not marketplace approval or a guarantee of search performance.
+
 ## What this demonstrates
 
 - Explicit provider routing with offline mock mode as the safe default.
@@ -40,6 +50,8 @@ npm run dev --prefix frontend
 ```
 
 Open `http://localhost:3000`. No `.env` file is required. Use `fixtures/images/synthetic_desk_organizer.png` for a synthetic upload.
+
+The UI also provides **Try sample product**, which renders the bundled synthetic desk-organizer illustration and deterministic listing without an API call.
 
 ## Deterministic evidence
 
