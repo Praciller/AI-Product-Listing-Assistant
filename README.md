@@ -134,6 +134,17 @@ git diff --check
 
 CI runs the same mock-only path without secrets.
 
+An on-demand deployment smoke test verifies the hosted demo renders and, when the deployment includes the mock-first build, exercises the synthetic sample path. It is not part of CI and does not depend on production uptime for code verification:
+
+```powershell
+cd e2e-tests
+npm ci
+npx playwright install chromium
+npx playwright test --project=chromium
+```
+
+If the sample-path check reports a stale-deployment warning, the hosted build predates `main` and needs a manual release.
+
 ## Privacy and safety
 
 - The endpoint reads uploads in 64 KiB chunks and retains at most the configured limit plus one byte. FastAPI's multipart layer may spool an upload to temporary storage before endpoint validation; the application closes the upload and does not persist it.

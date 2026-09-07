@@ -10,7 +10,7 @@ from __future__ import annotations
 import base64
 import json
 import os
-import random
+import secrets
 import time
 from dataclasses import dataclass
 from enum import Enum
@@ -413,4 +413,8 @@ def retry_delay(
 
 
 def default_jitter(maximum: float) -> float:
-    return random.uniform(0.0, maximum) if maximum else 0.0
+    if not maximum:
+        return 0.0
+    # Retry jitter only needs uniformity, not cryptographic strength, but a
+    # secrets-backed source keeps the default deterministic-free and simple.
+    return secrets.randbelow(1_000_001) / 1_000_000 * maximum
