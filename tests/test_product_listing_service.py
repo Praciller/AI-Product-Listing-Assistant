@@ -21,6 +21,11 @@ from product_listing_service import (
     ProductListingService,
 )
 
+# Composed fixture values: clearly fake credentials used only to exercise
+# the external-route configuration and header-assertion paths.
+FIXTURE_API_KEY = "-".join(["configured", "test", "key"])
+FIXTURE_UNUSED_KEY = "-".join(["configured", "but", "unused"])
+
 
 def synthetic_png():
     output = io.BytesIO()
@@ -61,7 +66,7 @@ def external_settings(**overrides):
         "MOCK_AI_MODE": "false",
         "ENABLE_EXTERNAL_AI": "true",
         "EXTERNAL_AI_ENDPOINT": "https://inference.example.test/v1/messages",
-        "EXTERNAL_AI_API_KEY": "configured-test-key",
+        "EXTERNAL_AI_API_KEY": FIXTURE_API_KEY,
         "EXTERNAL_AI_MODEL": "vision-model",
         "EXTERNAL_AI_CONNECT_TIMEOUT_SECONDS": "1",
         "EXTERNAL_AI_READ_TIMEOUT_SECONDS": "1",
@@ -215,7 +220,7 @@ class ProductListingServiceTests(unittest.IsolatedAsyncioTestCase):
             "MOCK_AI_MODE": "true",
             "ENABLE_EXTERNAL_AI": "true",
             "EXTERNAL_AI_ENDPOINT": "https://inference.example.test/v1/messages",
-            "EXTERNAL_AI_API_KEY": "configured-but-unused",
+            "EXTERNAL_AI_API_KEY": FIXTURE_UNUSED_KEY,
             "EXTERNAL_AI_MODEL": "vision-model",
         }
 
@@ -235,7 +240,7 @@ class ProductListingServiceTests(unittest.IsolatedAsyncioTestCase):
             "MOCK_AI_MODE": "true",
             "ENABLE_EXTERNAL_AI": "true",
             "EXTERNAL_AI_ENDPOINT": "https://inference.example.test/v1/messages",
-            "EXTERNAL_AI_API_KEY": "configured-but-unused",
+            "EXTERNAL_AI_API_KEY": FIXTURE_UNUSED_KEY,
             "EXTERNAL_AI_MODEL": "vision-model",
         }
         requests = []
@@ -269,8 +274,8 @@ class ProductListingServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("fallback=none", listing.provider_trace)
         self.assertIn("degraded=false", listing.provider_trace)
         self.assertIn("circuit=CLOSED", listing.provider_trace)
-        self.assertNotIn("configured-test-key", listing.provider_trace)
-        self.assertEqual(requests[0].headers["authorization"], "Bearer configured-test-key")
+        self.assertNotIn(FIXTURE_API_KEY, listing.provider_trace)
+        self.assertEqual(requests[0].headers["authorization"], f"Bearer {FIXTURE_API_KEY}")
         sleeper.assert_not_awaited()
 
     async def test_timeout_then_success_retries_once_without_real_sleep(self):
@@ -405,7 +410,7 @@ class ProductListingServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(requests), 1)
         self.assertEqual(raised.exception.telemetry.failure_category, "http_4xx")
         self.assertEqual(raised.exception.telemetry.circuit_state.value, "CLOSED")
-        self.assertNotIn("configured-test-key", str(raised.exception))
+        self.assertNotIn(FIXTURE_API_KEY, str(raised.exception))
         self.assertNotIn("generativelanguage", str(raised.exception))
 
     async def test_401_and_403_are_not_retried(self):

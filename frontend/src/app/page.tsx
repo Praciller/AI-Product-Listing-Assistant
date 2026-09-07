@@ -49,6 +49,25 @@ interface ApiResponse {
   error?: string;
 }
 
+const DEFAULT_API_BASE = "http://localhost:8000";
+
+function apiUrl(): string {
+  return process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_BASE;
+}
+
+function assertHttpBase(base: string): string {
+  try {
+    const parsed = new URL(base);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return base;
+    }
+  } catch {
+    // fall through to the safe default below
+  }
+  return DEFAULT_API_BASE;
+}
+
+
 const SAMPLE_RESULT: AnalysisResult = {
   title: "Minimalist Reusable Desk Organizer",
   description:
@@ -129,8 +148,7 @@ export default function Home() {
       formData.append("file", selectedFile);
       formData.append("language", selectedLanguage);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/generate-product-info`, {
+      const response = await fetch(`${assertHttpBase(apiUrl())}/generate-product-info`, {
         method: "POST",
         body: formData,
       });

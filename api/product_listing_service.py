@@ -1,5 +1,6 @@
 import os
 import asyncio
+import re
 from typing import Annotated, Any, Awaitable, Callable, Literal
 
 import httpx
@@ -45,6 +46,56 @@ LANGUAGES = {
 MAX_TITLE_LENGTH = 200
 MAX_DESCRIPTION_LENGTH = 4000
 MAX_TAG_LENGTH = 50
+
+# Deterministic grounding linter: word-bounded phrases that commonly mark
+# unverifiable product claims. Provider output cannot be verified against the
+# uploaded image, so matches are surfaced as warnings for human review rather
+# than silently passed through.
+_UNVERIFIED_CLAIM_PATTERNS: dict[str, tuple[re.Pattern[str], ...]] = {
+    "certification": tuple(
+        re.compile(rf"(?<![a-z]){re.escape(term)}(?![a-z])")
+        for term in (
+            "certified", "certification", "fda", "ce mark", "rohs",
+            "iso 9001", "ul listed", "sgs",
+        )
+    ),
+    "medical": tuple(
+        re.compile(rf"(?<![a-z]){re.escape(term)}(?![a-z])")
+        for term in (
+            "cure", "cures", "heals", "therapeutic", "medical grade",
+            "medical-grade", "hypoallergenic", "antibacterial",
+        )
+    ),
+    "environmental": tuple(
+        re.compile(rf"(?<![a-z]){re.escape(term)}(?![a-z])")
+        for term in (
+            "organic", "eco-friendly", "eco friendly", "biodegradable",
+            "compostable", "carbon neutral", "sustainable",
+        )
+    ),
+    "performance": tuple(
+        re.compile(rf"(?<![a-z]){re.escape(term)}(?![a-z])")
+        for term in (
+            "guaranteed", "lifetime warranty", "waterproof", "unbreakable",
+            "industrial grade", "industrial-grade", "lab tested", "lab-tested",
+        )
+    ),
+}
+
+_EXTERNAL_BASE_WARNING = "AI-generated draft; verify all claims before publishing."
+_MAX_WARNINGS = 5
+
+
+def _unverified_claim_warnings(text: str) -> list[str]:
+    folded = text.casefold()
+    warnings = [
+        f"Possible unverified {category} claim in generated text; "
+        "confirm against the product before publishing."
+        for category, patterns in _UNVERIFIED_CLAIM_PATTERNS.items()
+        if any(pattern.search(folded) for pattern in patterns)
+    ]
+    # ProductListing caps warnings at 5; keep the base draft warning first.
+    return warnings[: _MAX_WARNINGS - 1]
 
 
 class ListingContent(BaseModel):
@@ -319,12 +370,18 @@ class ProductListingService:
     def _validate_external_listing(listing: Any, language: str) -> ProductListing:
         try:
             payload = ProviderListingPayload.model_validate(listing)
+            claim_text = " ".join(
+                [payload.title, payload.description, *payload.tags]
+            )
             return ProductListing(
                 title=payload.title,
                 description=payload.description,
                 tags=payload.tags,
                 language=LANGUAGES.get(language.lower(), language),
-                warnings=["AI-generated draft; verify all claims before publishing."],
+                warnings=[
+                    _EXTERNAL_BASE_WARNING,
+                    *_unverified_claim_warnings(claim_text),
+                ],
                 validation_status="draft",
                 provider="external",
                 provider_trace="route=external; response_schema=validated",
